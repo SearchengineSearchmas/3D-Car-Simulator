@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Car Simulator — Traffic & Crash Cutscene</title>
+<title>3D Car Simulator — Traffic Crash Cutscene</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#87ceeb;font-family:system-ui}
@@ -19,6 +19,7 @@ background:rgba(0,0,0,.7);color:#fff;padding:14px 18px;border-radius:10px;displa
 <b>Controls:</b> Arrows / Joystick<br>
 <span id="speed">Speed: 0 km/h</span>
 </div>
+
 <div id="banner">Crash detected — calling firefighters…</div>
 <div id="joystick"><div id="stick"></div></div>
 
@@ -46,12 +47,10 @@ sunLight.castShadow=true;
 scene.add(sunLight);
 
 /* SUN */
-const sun=new THREE.Mesh(
+scene.add(new THREE.Mesh(
 new THREE.SphereGeometry(12,32,32),
 new THREE.MeshBasicMaterial({color:0xffdd33})
-);
-sun.position.set(200,160,-300);
-scene.add(sun);
+)).position.set(200,160,-300);
 
 /* GROUND */
 const grass=new THREE.Mesh(
@@ -67,11 +66,10 @@ new THREE.PlaneGeometry(4000,40),
 new THREE.MeshStandardMaterial({color:0x3aa7ff})
 );
 river.rotation.x=-Math.PI/2;
-river.position.z=-80;
-river.position.y=.02;
+river.position.set(0,.02,-80);
 scene.add(river);
 
-/* ROAD LOOP (slight turns) */
+/* ROAD */
 const roadSegments=[];
 for(let i=0;i<20;i++){
 const seg=new THREE.Mesh(
@@ -85,31 +83,23 @@ scene.add(seg);
 roadSegments.push(seg);
 }
 
-/* DETAILED CAR */
+/* CAR BUILDER */
 function buildCar(color){
 const g=new THREE.Group();
 const body=new THREE.Mesh(
 new THREE.BoxGeometry(3.8,1.2,1.7),
-new THREE.MeshStandardMaterial({color,metalness:.2,roughness:.6})
+new THREE.MeshStandardMaterial({color})
 );
 body.position.y=.8;
-body.castShadow=true;
+g.add(body);
 
 const cabin=new THREE.Mesh(
 new THREE.BoxGeometry(2.2,.9,1.4),
 new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:.85})
 );
 cabin.position.set(.3,1.25,0);
+g.add(cabin);
 
-const wheelGeo=new THREE.CylinderGeometry(.35,.35,.3,16);
-wheelGeo.rotateZ(Math.PI/2);
-const wheelMat=new THREE.MeshStandardMaterial({color:0x111});
-[[1.2,.35,.8],[1.2,.35,-.8],[-1.2,.35,.8],[-1.2,.35,-.8]].forEach(p=>{
-const w=new THREE.Mesh(wheelGeo,wheelMat);
-w.position.set(...p);w.castShadow=true;g.add(w);
-});
-
-g.add(body,cabin);
 return g;
 }
 
@@ -117,42 +107,15 @@ return g;
 const player=buildCar(0x3a8cff);
 scene.add(player);
 
-/* TRAFFIC */
+/* TRAFFIC (LIMITED & SLOW) */
 const traffic=[];
-for(let i=0;i<6;i++){
-const car=buildCar([0xff5252,0x4caf50,0xffc107,0x9c27b0][i%4]);
-car.position.set(40+i*60,0,(i%2?3:-3));
-car.userData.speed=6+Math.random()*4;
+for(let i=0;i<3;i++){
+const car=buildCar([0xff5252,0x4caf50,0xffc107][i]);
+car.position.set(80+i*120,0,(i-1)*3);
+car.userData.speed=2.2;
 scene.add(car);
 traffic.push(car);
 }
-
-/* TRAFFIC LIGHT */
-const lightGroup=new THREE.Group();
-const pole=new THREE.Mesh(
-new THREE.CylinderGeometry(.2,.2,5),
-new THREE.MeshStandardMaterial({color:0x444})
-);
-pole.position.y=2.5;
-const red=new THREE.Mesh(
-new THREE.SphereGeometry(.3),
-new THREE.MeshStandardMaterial({color:0xff3333})
-);
-red.position.set(0,4.5,0);
-const green=red.clone();
-green.material=green.material.clone();
-green.material.color.set(0x33ff33);
-green.position.y=3.8;
-lightGroup.add(pole,red,green);
-lightGroup.position.set(60,0,6);
-scene.add(lightGroup);
-
-let greenOn=true;
-setInterval(()=>{
-greenOn=!greenOn;
-red.material.emissive.set(greenOn?0x000000:0xff0000);
-green.material.emissive.set(greenOn?0x00ff00:0x000000);
-},4000);
 
 /* DRIVER (CUTSCENE) */
 function buildMan(){
@@ -161,9 +124,7 @@ const head=new THREE.Mesh(new THREE.SphereGeometry(.25),new THREE.MeshStandardMa
 head.position.y=1.7;
 const body=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.8),new THREE.MeshStandardMaterial({color:0x2f7df0}));
 body.position.y=1.2;
-const leg=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.8),new THREE.MeshStandardMaterial({color:0x111}));
-leg.position.y=.4;
-g.add(head,body,leg);
+g.add(head,body);
 return g;
 }
 const man=buildMan();
@@ -198,84 +159,13 @@ Object.keys(keys).forEach(k=>keys[k]=false);
 joy.addEventListener("touchmove",e=>{
 if(!active)return;
 const r=joy.getBoundingClientRect();
-const x=e.touches[0].clientX-r.left-60;
-const y=e.touches[0].clientY-r.top-60;
-const dx=Math.max(-40,Math.min(40,x));
-const dy=Math.max(-40,Math.min(40,y));
+const dx=Math.max(-40,Math.min(40,e.touches[0].clientX-r.left-60));
+const dy=Math.max(-40,Math.min(40,e.touches[0].clientY-r.top-60));
 stick.style.left=35+dx+"px";
 stick.style.top=35+dy+"px";
 keys.left=dx<-15; keys.right=dx>15;
 keys.up=dy<-15; keys.down=dy>15;
 });
 
-/* CRASH */
-let state="play";
-function triggerCrash(){
-state="cutscene";
-document.getElementById("banner").style.display="block";
-speed=0;
-man.position.copy(player.position);
-man.visible=true;
-let t=0;
-const timer=setInterval(()=>{
-t+=.02;
-man.position.z-=.4;
-if(t>3){
-clearInterval(timer);
-resetGame();
-}
-},16);
-}
-
-/* RESET */
-function resetGame(){
-document.getElementById("banner").style.display="none";
-player.position.set(0,0,0);
-player.rotation.y=0;
-man.visible=false;
-state="play";
-}
-
-/* LOOP */
-function animate(){
-requestAnimationFrame(animate);
-
-if(state==="play"){
-if(keys.up)speed+=.02;
-if(keys.down)speed-=.03;
-speed*=.98;
-if(keys.left)steer+=.03;
-if(keys.right)steer-=.03;
-steer*=.85;
-player.rotation.y+=steer*.02;
-player.position.x+=Math.cos(player.rotation.y)*speed;
-player.position.z+=Math.sin(player.rotation.y)*speed;
-
-traffic.forEach(c=>{
-c.position.x+=c.userData.speed*.5;
-if(c.position.x>player.position.x+200)c.position.x=player.position.x-200;
-});
-
-if(Math.abs(player.position.z)>10)triggerCrash();
-}
-
-camera.position.lerp(new THREE.Vector3(
-player.position.x-6,2,player.position.z+4),.1);
-camera.lookAt(player.position);
-
-document.getElementById("speed").textContent=
-"Speed: "+Math.round(Math.abs(speed)*120)+" km/h";
-
-renderer.render(scene,camera);
-}
-animate();
-
-/* RESIZE */
-addEventListener("resize",()=>{
-camera.aspect=innerWidth/innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(innerWidth,innerHeight);
-});
-</script>
-</body>
-</html>
+/* CRASH SYSTEM */
+let state="play
