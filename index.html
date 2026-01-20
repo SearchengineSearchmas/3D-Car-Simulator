@@ -2,27 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Car Simulator</title>
+  <title>3D Car Simulator with Scenery</title>
   <style>
     body { margin:0; overflow:hidden; background:#101418; }
     #hud {
       position:absolute; top:12px; left:12px; color:#e8f0ff; font-family:sans-serif;
       background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:8px; z-index:10;
     }
-    #joystick {
-      position:absolute; bottom:40px; left:40px; width:120px; height:120px;
-      background:rgba(255,255,255,0.1); border:2px solid #aaa; border-radius:50%;
-      touch-action:none; z-index:20;
-    }
-    #stick {
-      position:absolute; width:60px; height:60px; background:rgba(255,255,255,0.4);
-      border-radius:50%; left:30px; top:30px;
-    }
+    #hud b { color:#9bd1ff; }
   </style>
 </head>
 <body>
-  <div id="hud">Speed: <span id="speed">0</span> km/h</div>
-  <div id="joystick"><div id="stick"></div></div>
+  <div id="hud"><b>Controls:</b> ↑ accelerate, ↓ brake, ←/→ steer, R reset</div>
 
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
@@ -34,17 +25,14 @@
     // Scene & camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 2000);
-    camera.position.set(0,5,15);
-    camera.lookAt(0,0,0);
 
     // Lights
-    const hemi = new THREE.HemisphereLight(0xffffff,0x202020,0.9);
-    scene.add(hemi);
+    scene.add(new THREE.HemisphereLight(0xffffff,0x202020,0.9));
     const dir = new THREE.DirectionalLight(0xffffff,0.8);
     dir.position.set(10,20,10);
     scene.add(dir);
 
-    // Sky
+    // Sky & sun
     const sky = new THREE.Mesh(new THREE.SphereGeometry(1000,32,32),
       new THREE.MeshBasicMaterial({color:0x87ceeb, side:THREE.BackSide}));
     scene.add(sky);
@@ -53,10 +41,17 @@
     sun.position.set(200,300,-400);
     scene.add(sun);
 
+    // Grass ground
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),
+      new THREE.MeshStandardMaterial({color:0x228b22}));
+    grass.rotation.x = -Math.PI/2;
+    scene.add(grass);
+
     // Road
     const road = new THREE.Mesh(new THREE.PlaneGeometry(2000,20),
       new THREE.MeshStandardMaterial({color:0x333333}));
     road.rotation.x = -Math.PI/2;
+    road.position.y = 0.01;
     scene.add(road);
 
     // Lane markings
@@ -65,61 +60,110 @@
       const lane = new THREE.Mesh(new THREE.PlaneGeometry(2000,0.2), laneMat);
       lane.rotation.x = -Math.PI/2;
       lane.position.z = i*4;
-      lane.position.y = 0.01;
+      lane.position.y = 0.02;
       scene.add(lane);
     }
 
-    // Player car
+    // Trees
+    function addTree(x,z){
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,6,12),
+        new THREE.MeshStandardMaterial({color:0x8b5a2b}));
+      trunk.position.set(x,3,z);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(3,16,12),
+        new THREE.MeshStandardMaterial({color:0x2e7d32}));
+      crown.position.set(x,8,z);
+      scene.add(trunk,crown);
+    }
+    for(let i=0;i<10;i++){ addTree(-30,i*40-200); addTree(30,i*40-200); }
+
+    // Houses
+    function addHouse(x,z){
+      const base = new THREE.Mesh(new THREE.BoxGeometry(12,8,12),
+        new THREE.MeshStandardMaterial({color:0xcccccc}));
+      base.position.set(x,4,z);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(8,4,4),
+        new THREE.MeshStandardMaterial({color:0x8b0000}));
+      roof.position.set(x,10,z);
+      scene.add(base,roof);
+    }
+    for(let i=0;i<5;i++){ addHouse(-60,i*80-200); addHouse(60,i*80-200); }
+
+    // Player car (more detailed)
     function buildCar(color=0x3a8cff){
       const car = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),
         new THREE.MeshStandardMaterial({color}));
       body.position.y=0.8;
       car.add(body);
-      // rear bumper
-      const bumper = new THREE.Mesh(new THREE.BoxGeometry(3.6,0.4,0.2),
-        new THREE.MeshStandardMaterial({color:0x222222}));
-      bumper.position.set(0,0.4,-0.9);
-      car.add(bumper);
+      // cabin
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.9,1.4),
+        new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:0.8}));
+      cabin.position.set(0.2,1.25,0);
+      car.add(cabin);
+      // wheels
+      const wheelGeo = new THREE.CylinderGeometry(0.4,0.4,0.25,16);
+      wheelGeo.rotateZ(Math.PI/2);
+      const tireMat = new THREE.MeshStandardMaterial({color:0x111111});
+      [[1.2,0.35,0.75],[1.2,0.35,-0.75],[-1.2,0.35,0.75],[-1.2,0.35,-0.75]].forEach(([x,y,z])=>{
+        const w = new THREE.Mesh(wheelGeo,tireMat); w.position.set(x,y,z); car.add(w);
+      });
+      // lights
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2),
+        new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222222}));
+      hl.position.set(1.9,1.0,0.45);
+      car.add(hl,hl.clone().position.set(1.9,1.0,-0.45));
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.1),
+        new THREE.MeshStandardMaterial({color:0xff0000,emissive:0x440000}));
+      tl.position.set(-1.9,0.9,0.45);
+      car.add(tl,tl.clone().position.set(-1.9,0.9,-0.45));
       return car;
     }
     const player = buildCar();
     scene.add(player);
 
     // Traffic cars
-    function buildTraffic(x,z,color){
-      const car = buildCar(color);
-      car.position.set(x,0,z);
+    const traffic=[];
+    for(let i=0;i<5;i++){
+      const car=buildCar(0xff0000);
+      car.position.set(i*40-100,0,(i%2===0)?4:-4);
+      traffic.push(car);
       scene.add(car);
-      return car;
     }
-    const traffic = [
-      buildTraffic(20,4,0xff0000),
-      buildTraffic(-20,-4,0x00ff00)
-    ];
+
+    // Pedestrians
+    function buildPerson(x,z){
+      const head=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),
+        new THREE.MeshStandardMaterial({color:0xf2c7a5}));
+      head.position.set(x,1.6,z);
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,1.2,12),
+        new THREE.MeshStandardMaterial({color:0x2f7df0}));
+      body.position.set(x,0.6,z);
+      scene.add(head,body);
+      return {head,body};
+    }
+    const people=[buildPerson(0,10),buildPerson(5,-20)];
+
+    // Traffic lights
+    function addTrafficLight(x,z){
+      const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,6,12),
+        new THREE.MeshStandardMaterial({color:0x444444}));
+      pole.position.set(x,3,z);
+      scene.add(pole);
+      const red=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),
+        new THREE.MeshStandardMaterial({color:0xaa0000}));
+      red.position.set(x,5,z);
+      const yellow=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),
+        new THREE.MeshStandardMaterial({color:0xaaaa00}));
+      yellow.position.set(x,4,z);
+      const green=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),
+        new THREE.MeshStandardMaterial({color:0x00aa00}));
+      green.position.set(x,3,z);
+      scene.add(red,yellow,green);
+      return {red,yellow,green,state:"green",timer:0};
+    }
+    const lights=[addTrafficLight(0,-50)];
 
     // Controls
-    let speed=0;
-    const speedEl=document.getElementById('speed');
-    function animate(){
-      requestAnimationFrame(animate);
-      player.position.x += speed*0.01;
-      camera.position.set(player.position.x-8,4,player.position.z+15);
-      camera.lookAt(player.position);
-      speedEl.textContent=Math.round(speed*3.6);
-      renderer.render(scene,camera);
-    }
-    animate();
-
-    // Keyboard
-    window.addEventListener('keydown',e=>{
-      if(e.code==="ArrowUp") speed=10;
-      if(e.code==="ArrowDown") speed=-5;
-      if(e.code==="KeyR"){player.position.set(0,0,0);speed=0;}
-    });
-    window.addEventListener('keyup',e=>{
-      if(e.code==="ArrowUp"||e.code==="ArrowDown") speed=0;
-    });
-  </script>
-</body>
-</html>
+    let speed=0,steer=0;
+    const keys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,KeyR:false};
+    window.addEventListener('keydown',e=>{if(keys.hasOwnProperty(e.code))
