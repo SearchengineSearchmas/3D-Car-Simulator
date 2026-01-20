@@ -2,18 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Car Simulator — City + Crash + Joystick</title>
+<title>3D Car Simulator — Interior View</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#87ceeb}
+html,body{margin:0;height:100%;overflow:hidden;background:#87ceeb;}
 #hud{position:absolute;top:12px;left:12px;color:#fff;font-family:system-ui;background:rgba(0,0,0,.35);padding:10px 12px;border-radius:8px;z-index:10}
 #hud b{color:#ffd700;}
-#speed{margin-top:6px}
-#banner{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  color:#fff;background:rgba(0,0,0,.6);padding:12px 16px;border-radius:10px;
-  display:none;z-index:20;font-family:system-ui;font-weight:600;
-}
+#speed{margin-top:6px;}
+#banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;background:rgba(0,0,0,.6);padding:12px 16px;border-radius:10px;display:none;z-index:20;font-family:system-ui;font-weight:600;}
 #person{position:absolute;right:16px;bottom:16px;width:120px;height:220px;display:none;z-index:30;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.35));}
 #joystick{position:absolute;bottom:20px;left:20px;width:120px;height:120px;background:rgba(0,0,0,.25);border-radius:50%;touch-action:none;z-index:20}
 #stick{position:absolute;left:40px;top:40px;width:40px;height:40px;background:#fff;border-radius:50%;opacity:.9}
@@ -25,20 +21,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#87ceeb}
   <div id="speed">Speed: 0 km/h</div>
 </div>
 <div id="banner">Crash detected — driver exits vehicle!</div>
-<div id="person">
-  <div class="head" style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:90px;height:90px;background:#f2c7a5;border-radius:50%;border:3px solid #e0b28f;">
-    <div class="eye left" style="position:absolute;top:36px;left:28px;width:12px;height:12px;background:#111;border-radius:50%;"></div>
-    <div class="eye right" style="position:absolute;top:36px;right:28px;width:12px;height:12px;background:#111;border-radius:50%;"></div>
-    <div class="mouth" style="position:absolute;top:60px;left:50%;transform:translateX(-50%);width:36px;height:18px;border-bottom:4px solid #b05a4a;border-radius:0 0 36px 36px;"></div>
-  </div>
-  <div class="torso" style="position:absolute;top:92px;left:50%;transform:translateX(-50%);width:110px;height:70px;background:#2f7df0;border-radius:12px;border:3px solid #1f5ec0;"></div>
-  <div class="arm left" style="position:absolute;top:100px;left:2px;width:18px;height:60px;background:#2f7df0;border-radius:10px;border:3px solid #1f5ec0;"></div>
-  <div class="arm right" style="position:absolute;top:100px;right:2px;width:18px;height:60px;background:#2f7df0;border-radius:10px;border:3px solid #1f5ec0;"></div>
-  <div class="pants" style="position:absolute;top:162px;left:50%;transform:translateX(-50%);width:110px;height:58px;background:#111;border-radius:10px;border:3px solid #000;"></div>
-  <div class="leg left" style="position:absolute;top:170px;left:24px;width:36px;height:60px;background:#111;border-radius:8px;border:3px solid #000;"></div>
-  <div class="leg right" style="position:absolute;top:170px;right:24px;width:36px;height:60px;background:#111;border-radius:8px;border:3px solid #000;"></div>
-</div>
+<div id="person"></div>
 <div id="joystick"><div id="stick"></div></div>
+
+<!-- Background Music -->
+<audio id="bgmusic" loop autoplay>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/16/audio_8f3cdb71d3.mp3?filename=peaceful-background-music-112-1.mp3" type="audio/mpeg">
+</audio>
 
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
@@ -51,14 +40,11 @@ document.body.appendChild(renderer.domElement);
 /* ================= LIGHT ================= */
 scene.add(new THREE.HemisphereLight(0xffffff,0x444444,.7));
 const sun=new THREE.DirectionalLight(0xffffff,.9); sun.position.set(100,120,60); sun.castShadow=true; scene.add(sun);
-/* Sun mesh */
-const sunMesh=new THREE.Mesh(new THREE.SphereGeometry(20,32,32),new THREE.MeshBasicMaterial({color:0xffeb3b}));
-sunMesh.position.set(100,150,-200); scene.add(sunMesh);
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(20,32,32),new THREE.MeshBasicMaterial({color:0xffeb3b})).position.set(100,150,-200));
 
 /* ================= GRASS ================= */
-const grassGeo=new THREE.PlaneGeometry(5000,5000);
-const grassMat=new THREE.MeshStandardMaterial({color:0x4caf50});
-const grass=new THREE.Mesh(grassGeo,grassMat); grass.rotation.x=-Math.PI/2; grass.position.y=-0.01; scene.add(grass);
+const grass=new THREE.Mesh(new THREE.PlaneGeometry(5000,5000),new THREE.MeshStandardMaterial({color:0x4caf50}));
+grass.rotation.x=-Math.PI/2; grass.position.y=-0.01; scene.add(grass);
 
 /* ================= ROAD ================= */
 const roadSegments=[],roadMat=new THREE.MeshStandardMaterial({color:0x2a2f36});
@@ -75,78 +61,70 @@ function mountain(x,z){const m=new THREE.Mesh(new THREE.ConeGeometry(60,120,12),
 for(let i=0;i<40;i++){house(i*40,-60);office(i*60,60);tree(i*30,-30);}
 for(let i=0;i<10;i++) mountain(i*300,-300);
 
-/* ================= CAR BUILDERS ================= */
-function buildHyundaiI10(color=0x3a8cff){const car=new THREE.Group();
-const body=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),new THREE.MeshStandardMaterial({color,metalness:.1,roughness:.6}));
-body.castShadow=true;body.position.y=.8;car.add(body);
-const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.2,.9,1.4),new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:.85}));
-cabin.position.set(.2,1.25,0);cabin.castShadow=true;car.add(cabin);
-const wheelGeo=new THREE.CylinderGeometry(.35,.35,.25,16); wheelGeo.rotateZ(Math.PI/2); const wheelMat=new THREE.MeshStandardMaterial({color:0x111});
-[[1.2,.35,.75],[1.2,.35,-.75],[-1.2,.35,.75],[-1.2,.35,-.75]].forEach(([x,y,z])=>{const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(x,y,z); w.castShadow=true; car.add(w);});
-const hlMat=new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222,emissiveIntensity:.6});
-const hlL=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),hlMat); const hlR=hlL.clone(); hlL.position.set(1.9,1,.45); hlR.position.set(1.9,1,-.45); car.add(hlL,hlR);
-const plate=new THREE.Mesh(new THREE.BoxGeometry(.8,.15,.02),new THREE.MeshStandardMaterial({color:0xffffff})); plate.position.set(-1.9,.9,0); car.add(plate);
-return car;}
-
-function buildToyotaInnova(color=0xd14f3f){const car=new THREE.Group();
-const body=new THREE.Mesh(new THREE.BoxGeometry(4.6,1.4,1.9),new THREE.MeshStandardMaterial({color,metalness:.15,roughness:.55})); body.castShadow=true;body.position.y=.9;car.add(body);
-const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.8,1.1,1.7),new THREE.MeshStandardMaterial({color:0x1f252d,transparent:true,opacity:.85})); cabin.position.set(.3,1.4,0); cabin.castShadow=true; car.add(cabin);
-const wheelGeo=new THREE.CylinderGeometry(.42,.42,.28,16); wheelGeo.rotateZ(Math.PI/2); const wheelMat=new THREE.MeshStandardMaterial({color:0x111});
-[[1.6,.42,.9],[1.6,.42,-.9],[-1.6,.42,.9],[-1.6,.42,-.9]].forEach(([x,y,z])=>{const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(x,y,z); w.castShadow=true; car.add(w);});
-const hlMat=new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222,emissiveIntensity:.6});
-const hlL=new THREE.Mesh(new THREE.BoxGeometry(.25,.25,.25),hlMat); const hlR=hlL.clone(); hlL.position.set(2.3,1.2,.55); hlR.position.set(2.3,1.2,-.55); car.add(hlL,hlR);
-return car;}
+/* ================= DETAILED HYUNDAI I10 ================= */
+function buildHyundaiI10Interior(color=0x3a8cff){
+  const car=new THREE.Group();
+  
+  // Exterior body
+  const body=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),new THREE.MeshStandardMaterial({color,metalness:.1,roughness:.6})); 
+  body.castShadow=true; body.position.y=.8; car.add(body);
+  
+  // Cabin with windows
+  const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.2,.9,1.4),new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:.7}));
+  cabin.position.set(.2,1.25,0); cabin.castShadow=true; car.add(cabin);
+  
+  // Wheels
+  const wheelGeo=new THREE.CylinderGeometry(.35,.35,.25,16); wheelGeo.rotateZ(Math.PI/2); 
+  const wheelMat=new THREE.MeshStandardMaterial({color:0x111});
+  [[1.2,.35,.75],[1.2,.35,-.75],[-1.2,.35,.75],[-1.2,.35,-.75]].forEach(([x,y,z])=>{
+    const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(x,y,z); w.castShadow=true; car.add(w);
+  });
+  
+  // Steering wheel
+  const wheel=new THREE.Mesh(new THREE.TorusGeometry(0.25,0.05,16,100),new THREE.MeshStandardMaterial({color:0x111}));
+  wheel.rotation.x=Math.PI/2; wheel.position.set(0.5,1.5,0); car.add(wheel);
+  
+  // Seats
+  const seatMat=new THREE.MeshStandardMaterial({color:0x555555});
+  const driverSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.8,.5),seatMat); driverSeat.position.set(0.5,1.0,-0.35); car.add(driverSeat);
+  const passengerSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.8,.5),seatMat); passengerSeat.position.set(0.5,1.0,0.35); car.add(passengerSeat);
+  
+  // Dashboard
+  const dash=new THREE.Mesh(new THREE.BoxGeometry(0.2,.6,1.2),new THREE.MeshStandardMaterial({color:0x333333})); 
+  dash.position.set(1.2,1.1,0); car.add(dash);
+  
+  // Doors inner panels
+  const doorLeft=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a})); 
+  doorLeft.position.set(0.0,1.0,-0.8); car.add(doorLeft);
+  const doorRight=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a})); 
+  doorRight.position.set(0.0,1.0,0.8); car.add(doorRight);
+  
+  // Headlights
+  const hlMat=new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222,emissiveIntensity:.6});
+  const hlL=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),hlMat); const hlR=hlL.clone(); hlL.position.set(1.9,1,.45); hlR.position.set(1.9,1,-.45); car.add(hlL,hlR);
+  
+  return car;
+}
 
 /* ================= PLAYER ================= */
-const player=buildHyundaiI10(); scene.add(player);
-let speed=0,steer=0;
-const maxSpeed=22,accel=12,brakeAccel=18,friction=6,steerRate=1.6,steerDecay=2.5;
+const player=buildHyundaiI10Interior(); scene.add(player);
+let speed=0,steer=0,maxSpeed=22,accel=12,brakeAccel=18,friction=6,steerRate=1.6,steerDecay=2.5;
 const keys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,KeyR:false};
 window.addEventListener('keydown',e=>{if(keys.hasOwnProperty(e.code))keys[e.code]=true;});
 window.addEventListener('keyup',e=>{if(keys.hasOwnProperty(e.code))keys[e.code]=false;});
 
-/* ================= TRAFFIC ================= */
-const traffic=[]; const colorsI10=[0xff5252,0x4caf50,0xffc107,0x9c27b0,0x03a9f4]; const colorsInnova=[0x607d8b,0xd14f3f,0x8bc34a,0x795548];
-for(let i=0;i<6;i++){
-  const car=(i%2===0)?buildHyundaiI10(colorsI10[i%colorsI10.length]):buildToyotaInnova(colorsInnova[i%colorsInnova.length]);
-  const laneZ=[-6,0,6][i%3]; car.position.set(-200+i*80,0,laneZ+Math.random()*1-0.5);
-  car.userData={speed:8+Math.random()*10,laneZ,type:(i%2===0)?'i10':'innova'}; scene.add(car); traffic.push(car);
+/* ================= CAMERA INSIDE ================= */
+function updateCamera(){
+  const camOffset=new THREE.Vector3(0.7,1.25,0); // slightly behind steering wheel
+  camera.position.copy(camOffset.applyMatrix4(player.matrixWorld));
+  camera.lookAt(player.position.clone().add(new THREE.Vector3(2,1,0)));
 }
-
-/* ================= CAMERA ================= */
-const driverOffset=new THREE.Vector3(.3,1.35,.35);
-function updateCamera(){const w=new THREE.Vector3(); player.updateMatrixWorld(); w.copy(driverOffset).applyMatrix4(player.matrixWorld); camera.position.copy(w); camera.lookAt(w.clone().add(new THREE.Vector3(1,.2,0).applyQuaternion(player.quaternion)));}
 
 /* ================= MOBILE JOYSTICK ================= */
 const joy=document.getElementById("joystick"); const stick=document.getElementById("stick"); let joyActive=false;
 joy.addEventListener("pointerdown",()=>joyActive=true);
 joy.addEventListener("pointerup",()=>{joyActive=false;stick.style.left="40px";stick.style.top="40px";});
 joy.addEventListener("pointermove",e=>{if(!joyActive)return; const r=joy.getBoundingClientRect(); let x=e.clientX-r.left-60; let y=e.clientY-r.top-60; x=Math.max(-40,Math.min(40,x)); y=Math.max(-40,Math.min(40,y)); stick.style.left=40+x+"px"; stick.style.top=40+y+"px"; steer=-x/40; if(y<0)speed+=accel*0.02; else speed-=brakeAccel*0.02;});
-
-/* ================= CRASH CUTSCENE ================= */
-const banner=document.getElementById("banner"); const person=document.getElementById("person");
-function checkCollision(){
-  const playerBox=new THREE.Box3().setFromObject(player);
-  for(const car of traffic){const box=new THREE.Box3().setFromObject(car); if(playerBox.intersectsBox(box)) return car;}
-  return null;
-}
-function triggerCrash(hit){
-  banner.style.display="block"; speed=0; steer=0;
-  let t0=performance.now(); function cut(now){
-    const t=(now-t0)/1000;
-    player.rotation.y=Math.sin(t*10)*0.05;
-    if(t>0.8&&t<2.5) player.position.x+=.5; // walk out simulation
-    if(t>2.5&&t<4) player.position.x+=1.5; // run
-    if(t<=5){renderer.render(scene,camera); requestAnimationFrame(cut);}
-    else{banner.style.display="none"; person.style.display="block"; resetAfterCrash();}
-  }
-  requestAnimationFrame(cut);
-}
-function resetAfterCrash(){
-  player.position.set(0,0,0);player.rotation.set(0,0,0);speed=0;steer=0;
-  traffic.forEach((car,i)=>{car.position.set(-200+i*80,0,car.userData.laneZ); car.userData.speed=8+Math.random()*10;});
-  setTimeout(()=>{person.style.display="none";},3500);
-}
 
 /* ================= ANIMATE ================= */
 const speedEl=document.getElementById("speed");
@@ -161,18 +139,11 @@ function animate(now){
   speed=THREE.MathUtils.clamp(speed,-8,maxSpeed);
   player.rotation.y+=steer*(speed/maxSpeed)*0.8*dt;
   const f=new THREE.Vector3(1,0,0).applyQuaternion(player.quaternion); player.position.add(f.multiplyScalar(speed*dt));
-  player.position.z=THREE.MathUtils.clamp(player.position.z,-10,10);
-  if(keys.KeyR){player.position.set(0,0,0);player.rotation.set(0,0,0);speed=0;steer=0;}
   updateCamera();
-  traffic.forEach(car=>{car.position.x+=car.userData.speed*dt;if(car.position.x>900){car.position.x=-900; car.userData.speed=8+Math.random()*10;} car.position.z+=(car.userData.laneZ-car.position.z)*0.02;});
-  roadSegments.forEach(r=>{if(r.position.x+40<player.position.x) r.position.x+=roadSegments.length*40; r.position.z=Math.sin(r.position.x*0.005)*10;});
-  const hit=checkCollision(); if(hit) triggerCrash(hit);
   speedEl.textContent=Math.round(Math.abs(speed)*3.6);
   renderer.render(scene,camera); requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
-
-/* ================= RESIZE ================= */
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 </script>
 </body>
