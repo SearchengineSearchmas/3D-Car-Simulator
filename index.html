@@ -1,66 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>3D Car Simulator — City Loop & Cutscene</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>3D Car Simulator with Sounds & Joystick</title>
   <style>
     html, body { margin: 0; height: 100%; background: #101418; overflow: hidden; }
     #hud {
       position: absolute; top: 12px; left: 12px; color: #e8f0ff; font-family: system-ui, sans-serif;
-      background: rgba(0,0,0,0.35); padding: 10px 12px; border-radius: 8px; backdrop-filter: blur(4px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25); font-size: 14px; line-height: 1.4; z-index: 10;
+      background: rgba(0,0,0,0.35); padding: 10px 12px; border-radius: 8px;
+      font-size: 14px; line-height: 1.4; z-index: 10;
     }
     #hud b { color: #9bd1ff; }
     #speed { margin-top: 6px; }
 
-    #banner {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: #fff; font-family: system-ui, sans-serif; font-weight: 600; letter-spacing: 0.5px;
-      background: rgba(0,0,0,0.6); padding: 12px 16px; border-radius: 10px; display: none; z-index: 20;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    /* Joystick */
+    #joystick {
+      position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px;
+      background: rgba(255,255,255,0.1); border: 2px solid #aaa; border-radius: 50%;
+      touch-action: none; z-index: 20;
     }
-    #siren {
-      position: absolute; inset: 0; pointer-events: none; display: none; z-index: 5;
-      background: radial-gradient(closest-side, rgba(255,0,0,0.22), transparent 60%),
-                  radial-gradient(closest-side, rgba(0,80,255,0.22), transparent 60%);
-      animation: sirenPulse 0.6s linear infinite alternate;
+    #stick {
+      position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.4);
+      border-radius: 50%; left: 30px; top: 30px;
     }
-    @keyframes sirenPulse { from { opacity: 0.2; } to { opacity: 0.6; } }
 
-    /* Person overlay (HTML/CSS character) */
+    /* Person overlay */
     #person {
-      position: absolute; right: 16px; bottom: 16px; width: 120px; height: 220px; display: block; z-index: 30;
-      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35));
+      position: absolute; right: 16px; bottom: 16px; width: 140px; height: 260px; z-index: 20;
     }
     .person-wrap { position: relative; width: 100%; height: 100%; }
-    .head {
-      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-      width: 90px; height: 90px; background: #f2c7a5; border-radius: 50%; border: 3px solid #e0b28f;
-    }
-    .hair {
-      position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-      width: 96px; height: 52px; background: #111; border-top-left-radius: 60px; border-top-right-radius: 60px;
-      border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
-    }
-    .eye { position: absolute; top: 36px; width: 12px; height: 12px; background: #111; border-radius: 50%; }
+    .head { position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 100px; height: 100px; background: #f2c7a5; border-radius: 50%; border: 3px solid #e0b28f; }
+    .hair { position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 60px; background: #111; border-radius: 60px 60px 40px 40px; }
+    .eye { position: absolute; top: 38px; width: 14px; height: 14px; background: #111; border-radius: 50%; }
     .eye.left { left: 28px; } .eye.right { right: 28px; }
-    .mouth { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 36px; height: 18px; border-bottom: 4px solid #b05a4a; border-radius: 0 0 36px 36px; }
-    .torso { position: absolute; top: 92px; left: 50%; transform: translateX(-50%); width: 110px; height: 70px; background: #2f7df0; border-radius: 12px; border: 3px solid #1f5ec0; }
-    .arm { position: absolute; top: 100px; width: 18px; height: 60px; background: #2f7df0; border-radius: 10px; border: 3px solid #1f5ec0; }
-    .arm.left { left: 2px; } .arm.right { right: 2px; }
-    .pants { position: absolute; top: 162px; left: 50%; transform: translateX(-50%); width: 110px; height: 58px; background: #111; border-radius: 10px; border: 3px solid #000; }
-    .leg { position: absolute; top: 170px; width: 36px; height: 60px; background: #111; border-radius: 8px; border: 3px solid #000; }
-    .leg.left { left: 24px; } .leg.right { right: 24px; }
+    .mouth { position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 20px; border-bottom: 4px solid #b05a4a; border-radius: 0 0 40px 40px; }
+    .neck { position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+      width: 30px; height: 20px; background: #f2c7a5; border-radius: 6px; }
+    .torso { position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 80px; background: #2f7df0; border-radius: 12px; border: 3px solid #1f5ec0; }
+    .arm { position: absolute; top: 130px; width: 20px; height: 70px; background: #2f7df0; border-radius: 10px; border: 3px solid #1f5ec0; }
+    .arm.left { left: -10px; } .arm.right { right: -10px; }
+    .pants { position: absolute; top: 200px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 70px; background: #111; border-radius: 10px; border: 3px solid #000; }
+    .leg { position: absolute; top: 210px; width: 40px; height: 70px; background: #111; border-radius: 8px; border: 3px solid #000; }
+    .leg.left { left: 20px; } .leg.right { right: 20px; }
+    .shoe { position: absolute; top: 270px; width: 50px; height: 20px; background: #444; border-radius: 6px; border: 2px solid #000; }
+    .shoe.left { left: 15px; } .shoe.right { right: 15px; }
   </style>
 </head>
 <body>
   <div id="hud">
-    <div><b>Controls:</b> ↑ accelerate, ↓ brake/reverse, ←/→ steer, R reset</div>
+    <div><b>Controls:</b> ↑ accelerate, ↓ brake/reverse, ←/→ steer, R reset (or joystick)</div>
     <div id="speed">Speed: 0 km/h</div>
   </div>
-  <div id="banner">Crash detected — driver calls firefighters…</div>
-  <div id="siren"></div>
+
+  <!-- Joystick -->
+  <div id="joystick"><div id="stick"></div></div>
 
   <!-- Person overlay -->
   <div id="person">
@@ -71,474 +69,53 @@
         <div class="eye right"></div>
         <div class="mouth"></div>
       </div>
+      <div class="neck"></div>
       <div class="torso"></div>
       <div class="arm left"></div>
       <div class="arm right"></div>
       <div class="pants"></div>
       <div class="leg left"></div>
       <div class="leg right"></div>
+      <div class="shoe left"></div>
+      <div class="shoe right"></div>
     </div>
   </div>
 
+  <!-- Sounds -->
+  <audio id="engineSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f9f1b.mp3?filename=car-engine-loop-10859.mp3" loop></audio>
+  <audio id="fireSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1f9f1b.mp3?filename=fire-burning-10860.mp3"></audio>
+
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    // Scene & camera
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 2000);
 
-    // Sky dome (blue) + sun sphere (yellow)
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(1500, 32, 32), new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide }));
-    scene.add(sky);
-    const sun = new THREE.Mesh(new THREE.SphereGeometry(40, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
-    sun.position.set(400, 600, -800);
-    scene.add(sun);
+    // Sky + sun
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 32), new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide })));
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
+    sun.position.set(200, 300, -400); scene.add(sun);
 
     // Lighting
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x202020, 0.9);
-    scene.add(hemi);
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    sunLight.position.set(200, 260, -180);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(1024, 1024);
-    scene.add(sunLight);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x202020, 0.9));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    sunLight.position.set(120, 160, -80); scene.add(sunLight);
 
-    // Curved road loop (CatmullRomCurve3) + extruded mesh
-    const curvePoints = [
-      new THREE.Vector3(-400, 0, -120),
-      new THREE.Vector3(-200, 0, -220),
-      new THREE.Vector3(  50, 0, -260),
-      new THREE.Vector3( 300, 0, -120),
-      new THREE.Vector3( 380, 0,  80),
-      new THREE.Vector3( 200, 0,  220),
-      new THREE.Vector3( -50, 0,  260),
-      new THREE.Vector3(-300, 0,  120),
-      new THREE.Vector3(-420, 0,  -20),
-    ];
-    const roadCurve = new THREE.CatmullRomCurve3(curvePoints, true, 'catmullrom', 0.2);
+    // Road
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(2000, 20), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+    road.rotation.x = -Math.PI/2; scene.add(road);
 
-    // Create a road ribbon by sampling points and building quads
-    const roadWidth = 20;
-    const roadGeom = new THREE.BufferGeometry();
-    const segments = 300;
-    const positions = [];
-    const uvs = [];
-    const indices = [];
-    for (let i = 0; i <= segments; i++) {
-      const t = i / segments;
-      const p = roadCurve.getPoint(t);
-      const tangent = roadCurve.getTangent(t).normalize();
-      const normal = new THREE.Vector3(0,1,0);
-      const binormal = new THREE.Vector3().crossVectors(normal, tangent).normalize();
-      const left = p.clone().add(binormal.clone().multiplyScalar(-roadWidth/2));
-      const right = p.clone().add(binormal.clone().multiplyScalar( roadWidth/2));
-      positions.push(left.x, 0, left.z, right.x, 0, right.z);
-      uvs.push(0, t*10, 1, t*10);
-      if (i < segments) {
-        const a = i*2, b = i*2+1, c = i*2+2, d = i*2+3;
-        indices.push(a, b, c, b, d, c);
-      }
-    }
-    roadGeom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    roadGeom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    roadGeom.setIndex(indices);
-    roadGeom.computeVertexNormals();
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 1 });
-    const road = new THREE.Mesh(roadGeom, roadMat);
-    road.receiveShadow = true;
-    scene.add(road);
-
-    // Lane markings (center dashed)
+    // Lane markings
     const laneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    for (let i = 0; i < segments; i += 4) {
-      const t = i / segments;
-      const p = roadCurve.getPoint(t);
-      const tangent = roadCurve.getTangent(t).normalize();
-      const normal = new THREE.Vector3(0,1,0);
-      const binormal = new THREE.Vector3().crossVectors(normal, tangent).normalize();
-      const center = p.clone();
-      const dash = new THREE.Mesh(new THREE.PlaneGeometry(6, 0.4), laneMat);
-      dash.rotation.x = -Math.PI/2;
-      dash.position.set(center.x, 0.01, center.z);
-      // align dash with road direction
-      const angle = Math.atan2(tangent.z, tangent.x);
-      dash.rotation.z = angle;
-      scene.add(dash);
-    }
-
-    // Scenery: buildings & trees
-    function addBuilding(x, z, w=40, h=80, d=30, color=0x6c7a89) {
-      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
-      b.position.set(x, h/2, z);
-      b.castShadow = true;
-      scene.add(b);
-    }
-    function addTree(x, z) {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 12, 12), new THREE.MeshStandardMaterial({ color: 0x8b5a2b }));
-      trunk.position.set(x, 6, z);
-      trunk.castShadow = true;
-      const crown = new THREE.Mesh(new THREE.SphereGeometry(6, 16, 12), new THREE.MeshStandardMaterial({ color: 0x2e7d32 }));
-      crown.position.set(x, 16, z);
-      crown.castShadow = true;
-      scene.add(trunk, crown);
-    }
-    for (let i = 0; i < 10; i++) {
-      addBuilding(-500 + i*100, -260 + (i%2)*120, 40, 60 + (i%3)*30, 30, 0x607d8b);
-      addTree(-520 + i*100, 260 - (i%2)*120);
-    }
-
-    // Car builders (proxy but detailed)
-    function buildHyundaiI10(color = 0x3a8cff) {
-      const car = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 1.6), new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.6 }));
-      body.position.y = 0.8; body.castShadow = true; car.add(body);
-
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, 1.4), new THREE.MeshStandardMaterial({ color: 0x222a33, transparent: true, opacity: 0.85 }));
-      cabin.position.set(0.2, 1.25, 0); cabin.castShadow = true; car.add(cabin);
-
-      const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 16); wheelGeo.rotateZ(Math.PI/2);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-      [[ 1.2,0.35, 0.75],[ 1.2,0.35,-0.75],[-1.2,0.35, 0.75],[-1.2,0.35,-0.75]].forEach(([x,y,z])=>{
-        const w = new THREE.Mesh(wheelGeo, tireMat); w.position.set(x,y,z); w.castShadow = true; car.add(w);
-      });
-
-      // Mirrors
-      const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.2, roughness: 0.4 });
-      const mL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.05), mirrorMat); mL.position.set(0.8, 1.2, 0.9);
-      const mR = mL.clone(); mR.position.z = -0.9; car.add(mL, mR);
-
-      // Headlights & tail lights
-      const hlMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, emissive: 0x222222, emissiveIntensity: 0.6 });
-      const tlMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x440000, emissiveIntensity: 0.5 });
-      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2), hlMat); const hlR = hlL.clone();
-      hlL.position.set(1.9, 1.0, 0.45); hlR.position.set(1.9, 1.0, -0.45); car.add(hlL, hlR);
-      const tlL = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.1), tlMat); const tlR = tlL.clone();
-      tlL.position.set(-1.9, 0.9, 0.45); tlR.position.set(-1.9, 0.9, -0.45); car.add(tlL, tlR);
-
-      // Rear bumper
-      const bumper = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-      bumper.position.set(0,0.4,-0.9); car.add(bumper);
-
-      // Interior: steering wheel & seats
-      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.05, 16, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      wheel.position.set(0.6, 1.25, 0.35); wheel.rotation.z = Math.PI/2; car.add(wheel);
-      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0x333333 }));
-      column.position.set(0.6, 1.05, 0.35); car.add(column);
-      const seatMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.9 });
-      const seatL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.8), seatMat); seatL.position.set(-0.5, 1.0, 0.4); seatL.castShadow = true; car.add(seatL);
-      const seatR = seatL.clone(); seatR.position.set(-0.5, 1.0, -0.4); car.add(seatR);
-
-      return car;
-    }
-    function buildToyotaInnova(color = 0xd14f3f) {
-      const car = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.4, 1.9), new THREE.MeshStandardMaterial({ color, metalness: 0.15, roughness: 0.55 }));
-      body.position.y = 0.9; body.castShadow = true; car.add(body);
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.1, 1.7), new THREE.MeshStandardMaterial({ color: 0x1f252d, transparent: true, opacity: 0.85 }));
-      cabin.position.set(0.3, 1.4, 0); cabin.castShadow = true; car.add(cabin);
-      const wheelGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.28, 16); wheelGeo.rotateZ(Math.PI/2);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-      [[ 1.6,0.42, 0.9],[ 1.6,0.42,-0.9],[-1.6,0.42, 0.9],[-1.6,0.42,-0.9]].forEach(([x,y,z])=>{
-        const w = new THREE.Mesh(wheelGeo, tireMat); w.position.set(x,y,z); w.castShadow = true; car.add(w);
-      });
-      const hlMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, emissive: 0x222222, emissiveIntensity: 0.6 });
-      const tlMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x440000, emissiveIntensity: 0.5 });
-      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.25), hlMat); const hlR = hlL.clone();
-      hlL.position.set(2.3, 1.2, 0.55); hlR.position.set(2.3, 1.2, -0.55); car.add(hlL, hlR);
-      const tlL = new THREE.Mesh(new THREE.BoxGeometry(0.25,0.25,0.12), tlMat); const tlR = tlL.clone();
-      tlL.position.set(-2.3, 1.1, 0.55); tlR.position.set(-2.3, 1.1, -0.55); car.add(tlL, tlR);
-      // Mirrors
-      const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.2, roughness: 0.4 });
-      const mL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.06), mirrorMat); mL.position.set(1.0, 1.3, 1.0);
-      const mR = mL.clone(); mR.position.z = -1.0; car.add(mL, mR);
-      return car;
+    for (let i=-2; i<=2; i++) {
+      const lane = new THREE.Mesh(new THREE.PlaneGeometry(2000, 0.2), laneMat);
+      lane.rotation.x = -Math.PI/2; lane.position.z = i*4; lane.position.y = 0.01; scene.add(lane);
     }
 
     // Player car
-    const player = buildHyundaiI10(0x3a8cff);
-    scene.add(player);
-
-    // Camera behind car (outside view)
-    function updateCameraRear() {
-      const offset = new THREE.Vector3(-8, 4, 0);
-      const worldPos = offset.clone().applyMatrix4(player.matrixWorld);
-      camera.position.copy(worldPos);
-      camera.lookAt(player.position);
-    }
-
-    // Traffic cars
-    const traffic = [];
-    const colorsI10 = [0xff5252, 0x4caf50, 0xffc107, 0x03a9f4];
-    const colorsInnova = [0xd14f3f, 0x607d8b, 0x8bc34a];
-    function spawnTraffic() {
-      for (let i = 0; i < 10; i++) {
-        const car = (i % 2 === 0)
-          ? buildHyundaiI10(colorsI10[i % colorsI10.length])
-          : buildToyotaInnova(colorsInnova[i % colorsInnova.length]);
-        const t = i / 10;
-        const p = roadCurve.getPoint(t);
-        car.position.set(p.x, 0, p.z);
-        car.rotation.y = Math.atan2(roadCurve.getTangent(t).z, roadCurve.getTangent(t).x);
-        car.userData = { speed: (i % 3 === 0) ? 0 : 6 + Math.random() * 6, t, idle: (i % 3 === 0) };
-        scene.add(car);
-        traffic.push(car);
-      }
-    }
-    spawnTraffic();
-
-    function updateTraffic(dt) {
-      traffic.forEach(car => {
-        if (car.userData.idle) return;
-        car.userData.t = (car.userData.t + (car.userData.speed * dt) / 200) % 1;
-        const p = roadCurve.getPoint(car.userData.t);
-        const tan = roadCurve.getTangent(car.userData.t);
-        car.position.set(p.x, 0, p.z);
-        car.rotation.y = Math.atan2(tan.z, tan.x);
-      });
-    }
-
-    // Traffic lights (simple cycle)
-    const lights = [];
-    function addTrafficLight(tParam) {
-      const p = roadCurve.getPoint(tParam);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 8, 12), new THREE.MeshStandardMaterial({ color: 0x444444 }));
-      pole.position.set(p.x + 6, 4, p.z + 6);
-      const red = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), new THREE.MeshStandardMaterial({ color: 0xaa0000, emissive: 0x220000 }));
-      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), new THREE.MeshStandardMaterial({ color: 0xaaaa00, emissive: 0x222200 }));
-      const green = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), new THREE.MeshStandardMaterial({ color: 0x00aa00, emissive: 0x002200 }));
-      red.position.set(pole.position.x, 6.5, pole.position.z);
-      yellow.position.set(pole.position.x, 5.5, pole.position.z);
-      green.position.set(pole.position.x, 4.5, pole.position.z);
-      scene.add(pole, red, yellow, green);
-      lights.push({ red, yellow, green, state: 'green', timer: 0 });
-    }
-    addTrafficLight(0.1); addTrafficLight(0.45); addTrafficLight(0.75);
-
-    function updateLights(dt) {
-      lights.forEach(L => {
-        L.timer += dt;
-        if (L.state === 'green' && L.timer > 6) { L.state = 'yellow'; L.timer = 0; }
-        else if (L.state === 'yellow' && L.timer > 2) { L.state = 'red'; L.timer = 0; }
-        else if (L.state === 'red' && L.timer > 6) { L.state = 'green'; L.timer = 0; }
-        L.red.material.emissiveIntensity = (L.state === 'red') ? 1.2 : 0.1;
-        L.yellow.material.emissiveIntensity = (L.state === 'yellow') ? 1.2 : 0.1;
-        L.green.material.emissiveIntensity = (L.state === 'green') ? 1.2 : 0.1;
-      });
-    }
-
-    // Player controls & physics
-    let speed = 0, steer = 0;
-    const maxSpeed = 22, accel = 12, brakeAccel = 18, friction = 6, steerRate = 1.6, steerDecay = 2.5;
-    const keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false, KeyR:false };
-    window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.code)) keys[e.code] = true; });
-    window.addEventListener('keyup',   (e) => { if (keys.hasOwnProperty(e.code)) keys[e.code] = false; });
-
-    function resetPlayer() {
-      const p = roadCurve.getPoint(0.02);
-      const tan = roadCurve.getTangent(0.02);
-      player.position.set(p.x, 0, p.z);
-      player.rotation.y = Math.atan2(tan.z, tan.x);
-      speed = 0; steer = 0;
-    }
-    resetPlayer();
-
-    // Collision detection (player vs traffic)
-    function checkCollision() {
-      const playerBox = new THREE.Box3().setFromObject(player);
-      for (const car of traffic) {
-        const box = new THREE.Box3().setFromObject(car);
-        if (playerBox.intersectsBox(box)) return car;
-      }
-      return null;
-    }
-
-    // Fire truck builder
-    function buildFireTruck() {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(5.5, 2.0, 2.2), new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.1, roughness: 0.6 }));
-      body.position.y = 1.2; body.castShadow = true; g.add(body);
-      const cab = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.4, 2.0), new THREE.MeshStandardMaterial({ color: 0x990000, transparent: true, opacity: 0.85 }));
-      cab.position.set(1.2, 1.8, 0); g.add(cab);
-      const lightR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.4), new THREE.MeshStandardMaterial({ color: 0x0000ff, emissive: 0x000066 }));
-      const lightB = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.4), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x660000 }));
-      lightR.position.set(2.2, 2.4, 0.6); lightB.position.set(2.2, 2.4, -0.6); g.add(lightR, lightB);
-      g.userData = { lightR, lightB };
-      return g;
-    }
-    const fireTrucks = [];
-
-    // Driver (simple humanoid) for cutscene
-    function buildDriver() {
-      const g = new THREE.Group();
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshStandardMaterial({ color: 0xf2c7a5 }));
-      head.position.set(0, 1.7, 0);
-      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 12, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      hair.position.set(0, 1.78, 0);
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 12), new THREE.MeshStandardMaterial({ color: 0x2f7df0 }));
-      body.position.set(0, 1.35, 0);
-      const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.45, 12), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      const legR = legL.clone(); legL.position.set(-0.08, 1.0, 0); legR.position.set(0.08, 1.0, 0);
-      const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0x2f7df0 }));
-      const armR = armL.clone(); armL.position.set(-0.22, 1.45, 0); armR.position.set(0.22, 1.45, 0);
-      const phone = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.02), new THREE.MeshStandardMaterial({ color: 0x222222 }));
-      phone.position.set(0.22, 1.45, 0.05); // in right hand
-      g.add(head, hair, body, legL, legR, armL, armR, phone);
-      g.userData = { armR, phone };
-      return g;
-    }
-    const driver = buildDriver();
-    driver.visible = false;
-    scene.add(driver);
-
-    // Cutscene state
-    let state = 'play';
-    const banner = document.getElementById('banner');
-    const siren = document.getElementById('siren');
-
-    function triggerCrashCutscene(hitCar) {
-      state = 'crash';
-      speed = 0; steer = 0;
-      banner.style.display = 'block';
-      siren.style.display = 'block';
-
-      // Cinematic camera
-      camera.position.set(player.position.x - 10, 5, player.position.z + 8);
-      camera.lookAt(player.position);
-
-      // Place driver near door
-      driver.visible = true;
-      driver.position.copy(player.position).add(new THREE.Vector3(0.8, 0, 0.6));
-      driver.rotation.y = player.rotation.y + Math.PI / 2;
-
-      // Spawn fire trucks at a distance
-      for (let i = 0; i < 2; i++) {
-        const ft = buildFireTruck();
-        const p = roadCurve.getPoint((0.6 + i*0.1) % 1);
-        ft.position.set(p.x + 60, 0, p.z + 60);
-        scene.add(ft);
-        fireTrucks.push(ft);
-      }
-
-      const t0 = performance.now();
-      function cutsceneLoop(now) {
-        const t = (now - t0) / 1000;
-
-        // Impact shake 0–0.8s
-        if (t <= 0.8) {
-          player.rotation.y += Math.sin(t * 30) * 0.04;
-          player.position.y = Math.sin(t * 40) * 0.06;
-        } else {
-          player.position.y = 0;
-        }
-
-        // Driver: hand to pocket 0.8–1.6s, raise phone 1.6–2.4s
-        if (t > 0.8 && t <= 1.6) {
-          driver.userData.armR.rotation.x = - (t - 0.8) * 1.2;
-        } else if (t > 1.6 && t <= 2.4) {
-          driver.userData.armR.rotation.x = -1.0 + (t - 1.6) * 1.2;
-          driver.userData.phone.position.y = 1.45 + (t - 1.6) * 0.3; // toward ear
-        }
-
-        // Fire trucks drive in 1.2–4.5s with flashing lights
-        if (t > 1.2 && t <= 4.5) {
-          fireTrucks.forEach((ft, idx) => {
-            const dir = new THREE.Vector3().subVectors(player.position, ft.position).normalize();
-            ft.position.add(dir.multiplyScalar(10 * (1/60)));
-            const pulse = Math.sin(now * 0.02 + idx) > 0 ? 1.2 : 0.2;
-            ft.userData.lightR.material.emissiveIntensity = pulse;
-            ft.userData.lightB.material.emissiveIntensity = 1.4 - pulse;
-          });
-        }
-
-        if (t <= 5.0) {
-          renderer.render(scene, camera);
-          requestAnimationFrame(cutsceneLoop);
-        } else {
-          banner.style.display = 'none';
-          siren.style.display = 'none';
-          driver.visible = false;
-          fireTrucks.forEach(ft => scene.remove(ft));
-          fireTrucks.length = 0;
-          resetAfterCutscene();
-        }
-      }
-      requestAnimationFrame(cutsceneLoop);
-    }
-
-    function resetAfterCutscene() {
-      state = 'reset';
-      resetPlayer();
-      setTimeout(() => { state = 'play'; }, 800);
-    }
-
-    // HUD
-    const speedEl = document.getElementById('speed');
-
-    // Main loop
-    let last = performance.now();
-    function animate(now) {
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-
-      if (state === 'play') {
-        // Speed
-        if (keys.ArrowUp) speed += accel * dt;
-        else if (keys.ArrowDown) speed -= brakeAccel * dt;
-        else {
-          if (speed > 0) speed = Math.max(0, speed - friction * dt);
-          else if (speed < 0) speed = Math.min(0, speed + friction * dt);
-        }
-        speed = THREE.MathUtils.clamp(speed, -8, maxSpeed);
-
-        // Steering
-        if (keys.ArrowLeft) steer += steerRate * dt;
-        if (keys.ArrowRight) steer -= steerRate * dt;
-        if (!keys.ArrowLeft && !keys.ArrowRight) {
-          if (steer > 0) steer = Math.max(0, steer - steerDecay * dt);
-          else if (steer < 0) steer = Math.min(0, steer + steerDecay * dt);
-        }
-        const yaw = steer * (speed / maxSpeed) * 0.8;
-        player.rotation.y += yaw * dt;
-
-        // Move forward along local X
-        const forward = new THREE.Vector3(1, 0, 0).applyQuaternion(player.quaternion);
-        player.position.add(forward.multiplyScalar(speed * dt));
-
-        // Reset
-        if (keys.KeyR) resetPlayer();
-
-        // Camera & updates
-        updateCameraRear();
-        updateTraffic(dt);
-        updateLights(dt);
-
-        // Collision → cutscene
-        const hit = checkCollision();
-        if (hit) triggerCrashCutscene(hit);
-      }
-
-      speedEl.textContent = 'Speed: ' + Math.round(Math.abs(speed) * 3.6) + ' km/h';
-      if (state === 'play') renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
-
-    // Resize
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Initial placement
-    resetPlayer();
-    updateCameraRear();
-  </script>
-</body>
-</html>
+    function buildCar(color=0x3a8cff) {
+      const car = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 1.6
