@@ -2,118 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Car Simulator with Scenery</title>
+  <title>3D Car Simulator</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #101418; overflow: hidden; }
+    body { margin:0; overflow:hidden; background:#101418; }
     #hud {
-      position: absolute; top: 12px; left: 12px; color: #e8f0ff; font-family: system-ui, sans-serif;
-      background: rgba(0,0,0,0.35); padding: 10px 12px; border-radius: 8px;
-      font-size: 14px; line-height: 1.4; z-index: 10;
+      position:absolute; top:12px; left:12px; color:#e8f0ff; font-family:sans-serif;
+      background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:8px; z-index:10;
     }
-    #hud b { color: #9bd1ff; }
-    #speed { margin-top: 6px; }
-
-    /* Joystick */
     #joystick {
-      position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px;
-      background: rgba(255,255,255,0.1); border: 2px solid #aaa; border-radius: 50%;
-      touch-action: none; z-index: 20;
+      position:absolute; bottom:40px; left:40px; width:120px; height:120px;
+      background:rgba(255,255,255,0.1); border:2px solid #aaa; border-radius:50%;
+      touch-action:none; z-index:20;
     }
     #stick {
-      position: absolute; width: 60px; height: 60px; background: rgba(255,255,255,0.4);
-      border-radius: 50%; left: 30px; top: 30px;
+      position:absolute; width:60px; height:60px; background:rgba(255,255,255,0.4);
+      border-radius:50%; left:30px; top:30px;
     }
-
-    /* Person overlay */
-    #person {
-      position: absolute; right: 16px; bottom: 16px; width: 140px; height: 260px; z-index: 20;
-    }
-    .person-wrap { position: relative; width: 100%; height: 100%; }
-    .head { position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-      width: 100px; height: 100px; background: #f2c7a5; border-radius: 50%; border: 3px solid #e0b28f; }
-    .hair { position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
-      width: 110px; height: 60px; background: #111; border-radius: 60px 60px 40px 40px; }
-    .eye { position: absolute; top: 38px; width: 14px; height: 14px; background: #111; border-radius: 50%; }
-    .eye.left { left: 28px; } .eye.right { right: 28px; }
-    .mouth { position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
-      width: 40px; height: 20px; border-bottom: 4px solid #b05a4a; border-radius: 0 0 40px 40px; }
-    .neck { position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-      width: 30px; height: 20px; background: #f2c7a5; border-radius: 6px; }
-    .torso { position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
-      width: 120px; height: 80px; background: #2f7df0; border-radius: 12px; border: 3px solid #1f5ec0; }
-    .arm { position: absolute; top: 130px; width: 20px; height: 70px; background: #2f7df0; border-radius: 10px; border: 3px solid #1f5ec0; }
-    .arm.left { left: -10px; } .arm.right { right: -10px; }
-    .pants { position: absolute; top: 200px; left: 50%; transform: translateX(-50%);
-      width: 120px; height: 70px; background: #111; border-radius: 10px; border: 3px solid #000; }
-    .leg { position: absolute; top: 210px; width: 40px; height: 70px; background: #111; border-radius: 8px; border: 3px solid #000; }
-    .leg.left { left: 20px; } .leg.right { right: 20px; }
-    .shoe { position: absolute; top: 270px; width: 50px; height: 20px; background: #444; border-radius: 6px; border: 2px solid #000; }
-    .shoe.left { left: 15px; } .shoe.right { right: 15px; }
   </style>
 </head>
 <body>
-  <div id="hud">
-    <div><b>Controls:</b> ↑ accelerate, ↓ brake/reverse, ←/→ steer, R reset (or joystick)</div>
-    <div id="speed">Speed: 0 km/h</div>
-  </div>
-
-  <!-- Joystick -->
+  <div id="hud">Speed: <span id="speed">0</span> km/h</div>
   <div id="joystick"><div id="stick"></div></div>
-
-  <!-- Person overlay -->
-  <div id="person">
-    <div class="person-wrap">
-      <div class="hair"></div>
-      <div class="head">
-        <div class="eye left"></div>
-        <div class="eye right"></div>
-        <div class="mouth"></div>
-      </div>
-      <div class="neck"></div>
-      <div class="torso"></div>
-      <div class="arm left"></div>
-      <div class="arm right"></div>
-      <div class="pants"></div>
-      <div class="leg left"></div>
-      <div class="leg right"></div>
-      <div class="shoe left"></div>
-      <div class="shoe right"></div>
-    </div>
-  </div>
-
-  <!-- Sounds -->
-  <audio id="engineSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f9f1b.mp3?filename=car-engine-loop-10859.mp3" loop></audio>
-  <audio id="fireSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1f9f1b.mp3?filename=fire-burning-10860.mp3"></audio>
 
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({antialias:true});
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
+    // Scene & camera
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 2000);
+    camera.position.set(0,5,15);
+    camera.lookAt(0,0,0);
 
-    // Sky + sun
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1000, 32, 32), new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide })));
-    const sun = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
-    sun.position.set(200, 300, -400); scene.add(sun);
+    // Lights
+    const hemi = new THREE.HemisphereLight(0xffffff,0x202020,0.9);
+    scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff,0.8);
+    dir.position.set(10,20,10);
+    scene.add(dir);
 
-    // Lighting
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x202020, 0.9));
-    const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    sunLight.position.set(120, 160, -80); scene.add(sunLight);
+    // Sky
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(1000,32,32),
+      new THREE.MeshBasicMaterial({color:0x87ceeb, side:THREE.BackSide}));
+    scene.add(sky);
+    const sun = new THREE.Mesh(new THREE.SphereGeometry(30,32,32),
+      new THREE.MeshBasicMaterial({color:0xffd700}));
+    sun.position.set(200,300,-400);
+    scene.add(sun);
 
     // Road
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(2000, 20), new THREE.MeshStandardMaterial({ color: 0x333333 }));
-    road.rotation.x = -Math.PI/2; scene.add(road);
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(2000,20),
+      new THREE.MeshStandardMaterial({color:0x333333}));
+    road.rotation.x = -Math.PI/2;
+    scene.add(road);
 
     // Lane markings
-    const laneMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    for (let i=-2; i<=2; i++) {
-      const lane = new THREE.Mesh(new THREE.PlaneGeometry(2000, 0.2), laneMat);
-      lane.rotation.x = -Math.PI/2; lane.position.z = i*4; lane.position.y = 0.01; scene.add(lane);
+    const laneMat = new THREE.MeshBasicMaterial({color:0xffffff});
+    for(let i=-2;i<=2;i++){
+      const lane = new THREE.Mesh(new THREE.PlaneGeometry(2000,0.2), laneMat);
+      lane.rotation.x = -Math.PI/2;
+      lane.position.z = i*4;
+      lane.position.y = 0.01;
+      scene.add(lane);
     }
 
     // Player car
-    function buildCar(color=0
+    function buildCar(color=0x3a8cff){
+      const car = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),
+        new THREE.MeshStandardMaterial({color}));
+      body.position.y=0.8;
+      car.add(body);
+      // rear bumper
+      const bumper = new THREE.Mesh(new THREE.BoxGeometry(3.6,0.4,0.2),
+        new THREE.MeshStandardMaterial({color:0x222222}));
+      bumper.position.set(0,0.4,-0.9);
+      car.add(bumper);
+      return car;
+    }
+    const player = buildCar();
+    scene.add(player);
+
+    // Traffic cars
+    function buildTraffic(x,z,color){
+      const car = buildCar(color);
+      car.position.set(x,0,z);
+      scene.add(car);
+      return car;
+    }
+    const traffic = [
+      buildTraffic(20,4,0xff0000),
+      buildTraffic(-20,-4,0x00ff00)
+    ];
+
+    // Controls
+    let speed=0;
+    const speedEl=document.getElementById('speed');
+    function animate(){
+      requestAnimationFrame(animate);
+      player.position.x += speed*0.01;
+      camera.position.set(player.position.x-8,4,player.position.z+15);
+      camera.lookAt(player.position);
+      speedEl.textContent=Math.round(speed*3.6);
+      renderer.render(scene,camera);
+    }
+    animate();
+
+    // Keyboard
+    window.addEventListener('keydown',e=>{
+      if(e.code==="ArrowUp") speed=10;
+      if(e.code==="ArrowDown") speed=-5;
+      if(e.code==="KeyR"){player.position.set(0,0,0);speed=0;}
+    });
+    window.addEventListener('keyup',e=>{
+      if(e.code==="ArrowUp"||e.code==="ArrowDown") speed=0;
+    });
+  </script>
+</body>
+</html>
