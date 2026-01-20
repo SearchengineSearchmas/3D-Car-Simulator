@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Car Simulator — Interior View</title>
+<title>3D Car Simulator — Clear Interior View</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,body{margin:0;height:100%;overflow:hidden;background:#87ceeb;}
@@ -61,48 +61,48 @@ function mountain(x,z){const m=new THREE.Mesh(new THREE.ConeGeometry(60,120,12),
 for(let i=0;i<40;i++){house(i*40,-60);office(i*60,60);tree(i*30,-30);}
 for(let i=0;i<10;i++) mountain(i*300,-300);
 
-/* ================= DETAILED HYUNDAI I10 ================= */
+/* ================= DETAILED HYUNDAI I10 INTERIOR ================= */
 function buildHyundaiI10Interior(color=0x3a8cff){
   const car=new THREE.Group();
-  
-  // Exterior body
-  const body=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),new THREE.MeshStandardMaterial({color,metalness:.1,roughness:.6})); 
+  const body=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),new THREE.MeshStandardMaterial({color,metalness:.1,roughness:.6}));
   body.castShadow=true; body.position.y=.8; car.add(body);
   
   // Cabin with windows
-  const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.2,.9,1.4),new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:.7}));
+  const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.2,.9,1.4),new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:.6}));
   cabin.position.set(.2,1.25,0); cabin.castShadow=true; car.add(cabin);
   
   // Wheels
-  const wheelGeo=new THREE.CylinderGeometry(.35,.35,.25,16); wheelGeo.rotateZ(Math.PI/2); 
+  const wheelGeo=new THREE.CylinderGeometry(.35,.35,.25,16); wheelGeo.rotateZ(Math.PI/2);
   const wheelMat=new THREE.MeshStandardMaterial({color:0x111});
   [[1.2,.35,.75],[1.2,.35,-.75],[-1.2,.35,.75],[-1.2,.35,-.75]].forEach(([x,y,z])=>{
     const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(x,y,z); w.castShadow=true; car.add(w);
   });
-  
-  // Steering wheel
-  const wheel=new THREE.Mesh(new THREE.TorusGeometry(0.25,0.05,16,100),new THREE.MeshStandardMaterial({color:0x111}));
-  wheel.rotation.x=Math.PI/2; wheel.position.set(0.5,1.5,0); car.add(wheel);
-  
+
+  // Steering wheel (round with holes)
+  const torusGeo=new THREE.TorusGeometry(0.25,0.03,16,100);
+  const steering=new THREE.Mesh(torusGeo,new THREE.MeshStandardMaterial({color:0x111}));
+  steering.position.set(0.5,1.5,0); steering.rotation.x=Math.PI/2; car.add(steering);
+
   // Seats
   const seatMat=new THREE.MeshStandardMaterial({color:0x555555});
-  const driverSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.8,.5),seatMat); driverSeat.position.set(0.5,1.0,-0.35); car.add(driverSeat);
-  const passengerSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.8,.5),seatMat); passengerSeat.position.set(0.5,1.0,0.35); car.add(passengerSeat);
-  
-  // Dashboard
-  const dash=new THREE.Mesh(new THREE.BoxGeometry(0.2,.6,1.2),new THREE.MeshStandardMaterial({color:0x333333})); 
-  dash.position.set(1.2,1.1,0); car.add(dash);
-  
-  // Doors inner panels
-  const doorLeft=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a})); 
+  const driverSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.7,.5),seatMat); driverSeat.position.set(0.5,1.0,-0.35); car.add(driverSeat);
+  const passengerSeat=new THREE.Mesh(new THREE.BoxGeometry(.5,.7,.5),seatMat); passengerSeat.position.set(0.5,1.0,0.35); car.add(passengerSeat);
+
+  // Dashboard (small, low)
+  const dash=new THREE.Mesh(new THREE.BoxGeometry(0.2,.4,1.2),new THREE.MeshStandardMaterial({color:0x333333}));
+  dash.position.set(1.1,1.05,0); car.add(dash);
+
+  // Doors inner panels (thin)
+  const doorLeft=new THREE.Mesh(new THREE.BoxGeometry(.05,.8,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a}));
   doorLeft.position.set(0.0,1.0,-0.8); car.add(doorLeft);
-  const doorRight=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a})); 
+  const doorRight=new THREE.Mesh(new THREE.BoxGeometry(.05,.8,1.2),new THREE.MeshStandardMaterial({color:0x2a2a2a}));
   doorRight.position.set(0.0,1.0,0.8); car.add(doorRight);
-  
+
   // Headlights
   const hlMat=new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222,emissiveIntensity:.6});
-  const hlL=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),hlMat); const hlR=hlL.clone(); hlL.position.set(1.9,1,.45); hlR.position.set(1.9,1,-.45); car.add(hlL,hlR);
-  
+  const hlL=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),hlMat); const hlR=hlL.clone();
+  hlL.position.set(1.9,1,.45); hlR.position.set(1.9,1,-.45); car.add(hlL,hlR);
+
   return car;
 }
 
@@ -115,9 +115,9 @@ window.addEventListener('keyup',e=>{if(keys.hasOwnProperty(e.code))keys[e.code]=
 
 /* ================= CAMERA INSIDE ================= */
 function updateCamera(){
-  const camOffset=new THREE.Vector3(0.7,1.25,0); // slightly behind steering wheel
+  const camOffset=new THREE.Vector3(0.7,1.2,0); // slightly behind steering wheel
   camera.position.copy(camOffset.applyMatrix4(player.matrixWorld));
-  camera.lookAt(player.position.clone().add(new THREE.Vector3(2,1,0)));
+  camera.lookAt(player.position.clone().add(new THREE.Vector3(3,0.5,0)));
 }
 
 /* ================= MOBILE JOYSTICK ================= */
