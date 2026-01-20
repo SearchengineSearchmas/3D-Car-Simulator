@@ -2,18 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Car Simulator with Scenery</title>
+  <title>3D Car Simulator</title>
   <style>
     body { margin:0; overflow:hidden; background:#101418; }
     #hud {
       position:absolute; top:12px; left:12px; color:#e8f0ff; font-family:sans-serif;
       background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:8px; z-index:10;
     }
-    #hud b { color:#9bd1ff; }
+    #joystick {
+      position:absolute; bottom:40px; left:40px; width:120px; height:120px;
+      background:rgba(255,255,255,0.1); border:2px solid #aaa; border-radius:50%;
+      touch-action:none; z-index:20;
+    }
+    #stick {
+      position:absolute; width:60px; height:60px; background:rgba(255,255,255,0.4);
+      border-radius:50%; left:30px; top:30px;
+    }
   </style>
 </head>
 <body>
-  <div id="hud"><b>Controls:</b> ↑ accelerate, ↓ brake, ←/→ steer, R reset</div>
+  <div id="hud">Speed: <span id="speed">0</span> km/h</div>
+  <div id="joystick"><div id="stick"></div></div>
+
+  <!-- Sounds -->
+  <audio id="engineSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3f9f1b.mp3?filename=car-engine-loop-10859.mp3" loop></audio>
+  <audio id="fireSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1f9f1b.mp3?filename=fire-burning-10860.mp3"></audio>
 
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
   <script>
@@ -64,7 +77,7 @@
       scene.add(lane);
     }
 
-    // Trees
+    // Trees & houses
     function addTree(x,z){
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,6,12),
         new THREE.MeshStandardMaterial({color:0x8b5a2b}));
@@ -76,7 +89,6 @@
     }
     for(let i=0;i<10;i++){ addTree(-30,i*40-200); addTree(30,i*40-200); }
 
-    // Houses
     function addHouse(x,z){
       const base = new THREE.Mesh(new THREE.BoxGeometry(12,8,12),
         new THREE.MeshStandardMaterial({color:0xcccccc}));
@@ -88,34 +100,23 @@
     }
     for(let i=0;i<5;i++){ addHouse(-60,i*80-200); addHouse(60,i*80-200); }
 
-    // Player car (more detailed)
+    // Player car
     function buildCar(color=0x3a8cff){
       const car = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(3.6,1.2,1.6),
         new THREE.MeshStandardMaterial({color}));
       body.position.y=0.8;
       car.add(body);
-      // cabin
       const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.9,1.4),
         new THREE.MeshStandardMaterial({color:0x222a33,transparent:true,opacity:0.8}));
       cabin.position.set(0.2,1.25,0);
       car.add(cabin);
-      // wheels
       const wheelGeo = new THREE.CylinderGeometry(0.4,0.4,0.25,16);
       wheelGeo.rotateZ(Math.PI/2);
       const tireMat = new THREE.MeshStandardMaterial({color:0x111111});
       [[1.2,0.35,0.75],[1.2,0.35,-0.75],[-1.2,0.35,0.75],[-1.2,0.35,-0.75]].forEach(([x,y,z])=>{
         const w = new THREE.Mesh(wheelGeo,tireMat); w.position.set(x,y,z); car.add(w);
       });
-      // lights
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.2),
-        new THREE.MeshStandardMaterial({color:0xf5f5f5,emissive:0x222222}));
-      hl.position.set(1.9,1.0,0.45);
-      car.add(hl,hl.clone().position.set(1.9,1.0,-0.45));
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.1),
-        new THREE.MeshStandardMaterial({color:0xff0000,emissive:0x440000}));
-      tl.position.set(-1.9,0.9,0.45);
-      car.add(tl,tl.clone().position.set(-1.9,0.9,-0.45));
       return car;
     }
     const player = buildCar();
@@ -156,14 +157,4 @@
         new THREE.MeshStandardMaterial({color:0xaaaa00}));
       yellow.position.set(x,4,z);
       const green=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,12),
-        new THREE.MeshStandardMaterial({color:0x00aa00}));
-      green.position.set(x,3,z);
-      scene.add(red,yellow,green);
-      return {red,yellow,green,state:"green",timer:0};
-    }
-    const lights=[addTrafficLight(0,-50)];
-
-    // Controls
-    let speed=0,steer=0;
-    const keys={ArrowUp:false,ArrowDown:false,ArrowLeft:false,ArrowRight:false,KeyR:false};
-    window.addEventListener('keydown',e=>{if(keys.hasOwnProperty(e.code))
+        new THREE.MeshStandardMaterial({color:0
